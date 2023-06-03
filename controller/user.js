@@ -74,9 +74,9 @@ const getSingleUser = asyncHandler(async(req,res)=> {
   validateMongoDbId(id);
 
   try {
-    const getaUser = await User.findById(id);
+    const getUser = await User.findById(id);
     res.json({
-      getaUser,
+      getUser,
     });
   } catch (error) {
     throw new Error(error);

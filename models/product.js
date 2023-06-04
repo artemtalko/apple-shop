@@ -7,7 +7,7 @@ var productSchema = new mongoose.Schema({
         require: true,
         trim: true
     },
-    slogan:{
+    slug:{
         type:String,
         required:true,
         unique:true,

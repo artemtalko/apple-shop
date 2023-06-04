@@ -13,7 +13,7 @@ const morgan = require('morgan');
 
 db();
 
-app.use(morgan());
+app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());

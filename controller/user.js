@@ -3,6 +3,7 @@ const asyncHandler = require('express-async-handler');
 const { generateToken } = require('../config/jwtToken');
 const validateMongoDbId = require('../utils/validateMongodbId');
 const {generateRefreshToken} = require('../config/refreshToken');
+const jwt = require('jsonwebtoken');
 //create
 const createUser = asyncHandler(
     async(req,res) => {
@@ -49,16 +50,32 @@ const loginUser = asyncHandler(
       }
 });
 
-//handle refresh token
-const handleRefreshToken = asyncHandler(async(req,res) =>{
-  const cookie = req.cookies;
-  console.log(cookie);
+//logout functional
+const logoutUser = asyncHandler(async(req,res) =>{
+
 });
 
-
+//handle refresh token
+const handleRefreshToken = asyncHandler(async(req,res) => {
+  const cookie = req.cookies;
+  if(!cookie?.refreshToken) throw new Error('no refresh token in cookies');
+  const refreshToken = cookie.refreshToken;
+  const user = await User.findOne({refreshToken});
+  if(!user) throw new Error('no refresh token present in DB or no matches');
+  jwt.verify(
+    refreshToken,
+    process.env.JWT_SECRET,
+    (err, decoded) => {
+      if (err || user.id !== decoded.id) {
+        throw new Error("something wrong with refresh token..");
+      }
+      const accessToken = generateToken(user?._id);
+      res.json({ accessToken });
+  });
+});
 
 //get all users
-const getAllUsers = asyncHandler(async(req,res) =>{
+const getAllUsers = asyncHandler(async(req,res) => {
     try{
         const getUsers = await User.find();
         res.json(getUsers);
@@ -67,9 +84,8 @@ const getAllUsers = asyncHandler(async(req,res) =>{
     }
 });
 
-
 //get single user
-const getSingleUser = asyncHandler(async(req,res)=> {
+const getSingleUser = asyncHandler(async(req,res) => {
   const { id } = req.params;
   validateMongoDbId(id);
 
@@ -84,7 +100,7 @@ const getSingleUser = asyncHandler(async(req,res)=> {
 });
 
 //delete single user
-const deleteSingleUser = asyncHandler(async(req,res)=> {
+const deleteSingleUser = asyncHandler(async(req,res) => {
     const { id } = req.params;
     validateMongoDbId(id);
     try {
@@ -122,7 +138,7 @@ const updateUser = asyncHandler(async(req,res) => {
 });
 
 //block user
-const blockUser = asyncHandler(async(req,res) =>{
+const blockUser = asyncHandler(async(req,res) => {
   const {id} = req.params;
   validateMongoDbId(id);
   try{
@@ -139,7 +155,7 @@ const blockUser = asyncHandler(async(req,res) =>{
 }); 
 
 //unblock user
-const unblockUser = asyncHandler(async(req,res) =>{
+const unblockUser = asyncHandler(async(req,res) => {
   const {id} = req.params;
   validateMongoDbId(id);
   try{
@@ -165,4 +181,6 @@ module.exports = {
   blockUser,
   unblockUser,
   handleRefreshToken,
+  logoutUser,
+  
 };

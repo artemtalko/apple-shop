@@ -9,6 +9,7 @@ const {
     blockUser,
     unblockUser,
     handleRefreshToken,
+    logoutUser,
 
 } = require('../controller/user');
 const {authMiddleware, isAdmin} = require('../middleware/authMiddleware');
@@ -19,6 +20,7 @@ router.post('/register', createUser);
 router.post('/login', loginUser);
 
 router.get('/refresh', handleRefreshToken);
+router.get('/logout', logoutUser);
 router.get('/all-users', getAllUsers);
 router.get('/:id',  authMiddleware, isAdmin, getSingleUser);
 

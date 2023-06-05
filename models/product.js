@@ -5,12 +5,13 @@ var productSchema = new mongoose.Schema({
     title:{
         type:String,
         require: true,
-        trim: true
+        trim: true,
+        unique: true
     },
     slug:{
         type:String,
-        required:true,
-        unique:true,
+        required: true,
+        unique: true,
         lowercase: true,
     },
     description:{
@@ -29,10 +30,14 @@ var productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    quantity: Number,
+    quantity: {
+        type: Number,
+        required: true,
+        select: false
+    },
     sold:{
         type: Number,
-        default: 0
+        default: 0,
     },
     images: {
         type: Array

@@ -15,20 +15,39 @@ const createProduct = asyncHandler(async(req,res) => {
         throw new Error(error);
       }
 });
+
+
 //update product
 const updateProduct = asyncHandler(async(req,res) => {
-    const id = req.params;
-    try {
-      if (req.body.title) {
-        req.body.slug = slugify(req.body.title);
-      }
-      const updatedProduct = await Product.findOneAndUpdate({ id }, req.body, {
-        new: true,
-      });
-      res.json({updatedProduct});
-    } catch (error) {
-      throw new Error(error);
+  const {id} = req.params;
+  try {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title);
     }
+    const updateProduct = await Product.findOneAndUpdate({ _id: id }, req.body, {
+      new: true,
+    });
+    res.json(updateProduct);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+//delete a product
+const deleteProduct = asyncHandler(async(req,res) => {
+  const {id} = req.params;
+  try {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title);
+    }
+    const deleteProduct = await Product.findOneAndDelete({ _id: id }, req.body, {
+      new: true,
+    });
+    
+    res.json(deleteProduct);
+  } catch (error) {
+    throw new Error(error);
+  }
 });
 
 
@@ -45,8 +64,8 @@ const getSingleProduct = asyncHandler(async(req,res) => {
 
 //get all products
 const getAllProducts = asyncHandler(async(req,res) => {
-    try{
-        const getAllProducts = await Product.find();
+  try {
+        const getAllProducts = await Product.where('category').equals(req.query.category);
         res.json(getAllProducts);
     } catch(error){
         throw new Error(error);
@@ -54,4 +73,4 @@ const getAllProducts = asyncHandler(async(req,res) => {
 });
 
 
-module.exports = {createProduct, getSingleProduct, getAllProducts, updateProduct};
+module.exports = {createProduct, getSingleProduct, getAllProducts, updateProduct, deleteProduct};

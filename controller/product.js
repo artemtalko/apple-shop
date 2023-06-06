@@ -43,7 +43,7 @@ const deleteProduct = asyncHandler(async(req,res) => {
     const deleteProduct = await Product.findOneAndDelete({ _id: id }, req.body, {
       new: true,
     });
-    
+
     res.json(deleteProduct);
   } catch (error) {
     throw new Error(error);
@@ -65,7 +65,7 @@ const getSingleProduct = asyncHandler(async(req,res) => {
 //get all products
 const getAllProducts = asyncHandler(async(req,res) => {
   try {
-    
+
     // Filtering
     const queryObj = { ...req.query };
     const excludeFields = ["page", "sort", "limit", "fields"];
@@ -109,4 +109,4 @@ const getAllProducts = asyncHandler(async(req,res) => {
 
 
 
-module.exports = {createProduct, getSingleProduct, getAllProducts, updateProduct, deleteProduct};
+module.exports = {createProduct, getSingleProduct, getAllProducts, updateProduct, deleteProduct}; 

@@ -25,7 +25,6 @@ router.get('/logout', logoutUser);
 router.get('/all-users', getAllUsers);
 router.get('/:id',  authMiddleware, isAdmin, getSingleUser);
 
-
 router.delete('/:id', deleteSingleUser);
 
 router.put('/edit-user', authMiddleware, updateUser);

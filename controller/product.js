@@ -191,7 +191,9 @@ const rating = asyncHandler(async (req, res) => {
       {
         totalrating: actualRating,
       },
-      { new: true }
+      { 
+        new: true
+      }
     );
     res.json(finalproduct);
   } catch (error) {

@@ -10,6 +10,7 @@ const validateMongoDbId = require('../utils/validateMongodbId');
 const {generateRefreshToken} = require('../config/refreshToken');
 const jwt = require('jsonwebtoken');
 const uniqid = require("uniqid");
+
 //create
 const createUser = asyncHandler(
     async(req,res) => {
@@ -57,7 +58,6 @@ const loginUser = asyncHandler(
 });
 
 // admin login
-
 const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   // check if user exists or not
@@ -88,7 +88,6 @@ const loginAdmin = asyncHandler(async (req, res) => {
     throw new Error("Invalid Credentials");
   }
 });
-
 
 //logout functional
 const logoutUser = asyncHandler(async(req,res) =>{
@@ -252,7 +251,6 @@ const getWishlist = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
 //add products to cart
 const userCart = asyncHandler(async (req, res) => {
   const { _id } = req.user;
@@ -262,11 +260,18 @@ const userCart = asyncHandler(async (req, res) => {
   try {
     let products = [];
     const user = await User.findById(_id);
-    // check if user already have products in cart
+    
+    // Check if the user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "User is blocked and cannot add items to the cart." });
+    }
+
+    // Check if user already has products in cart
     const alreadyExistCart = await Cart.findOne({ orderby: user._id });
     if (alreadyExistCart) {
       alreadyExistCart.remove();
     }
+
     for (let i = 0; i < cart.length; i++) {
       let object = {};
       object.product = cart[i]._id;
@@ -276,15 +281,18 @@ const userCart = asyncHandler(async (req, res) => {
       object.price = getPrice.price;
       products.push(object);
     }
+
     let cartTotal = 0;
     for (let i = 0; i < products.length; i++) {
       cartTotal = cartTotal + products[i].price * products[i].count;
     }
+
     let newCart = await new Cart({
       products,
       cartTotal,
       orderby: user?._id,
     }).save();
+
     res.json(newCart);
   } catch (error) {
     throw new Error(error);
@@ -304,7 +312,6 @@ const getUserCart = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
 
 //clear the cart
 const emptyCart = asyncHandler(async (req, res) => {
@@ -403,7 +410,6 @@ const getOrders = asyncHandler(async (req, res) => {
   }
 });
 
-
 //get all orders(for admin only)
 const getAllOrders = asyncHandler(async (req, res) => {
   try {
@@ -424,8 +430,6 @@ const getAllOrders = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
-
 
 //get user`s order by id(admin only)
 const getOrderByUserId = asyncHandler(async (req, res) => {
@@ -462,7 +466,6 @@ const getOrderByUserId = asyncHandler(async (req, res) => {
   }
 });
 
-
 //update order
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
@@ -485,7 +488,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   }
 });
 
-
+//get statistics about orders
 const getOrderStatistics = asyncHandler(async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();

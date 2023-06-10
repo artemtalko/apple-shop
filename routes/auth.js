@@ -20,7 +20,8 @@ const {
     createOrder,
     getOrders,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    getOrderStatistics
     
 } = require('../controller/user');
 const {authMiddleware, isAdmin} = require('../middleware/authMiddleware');
@@ -44,6 +45,7 @@ router.get('/get-orders', authMiddleware, isAdmin, getAllOrders);
 router.get('/wishlist', authMiddleware, getWishlist);
 router.get('/cart', authMiddleware, getUserCart);
 router.get('/cart/orders', authMiddleware, getOrders);
+router.get('/statistic', authMiddleware, isAdmin, getOrderStatistics);
 router.get('/:id',  authMiddleware, isAdmin, getSingleUser);
 
 router.delete('/empty-cart', authMiddleware, emptyCart);

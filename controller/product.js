@@ -144,7 +144,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
 });
 
 
-
+//get rating of product
 const rating = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { star, prodId, comment } = req.body;
@@ -203,6 +203,7 @@ const rating = asyncHandler(async (req, res) => {
   }
 });
 
+//add image
 const uploadImages = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongoDbId(id);

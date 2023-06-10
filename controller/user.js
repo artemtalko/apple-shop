@@ -407,30 +407,61 @@ const getOrders = asyncHandler(async (req, res) => {
 //get all orders(for admin only)
 const getAllOrders = asyncHandler(async (req, res) => {
   try {
-    const alluserorders = await Order.find()
-      .populate("products.product")
-      .populate("orderby")
-      .exec();
+    const alluserorders = await Order.aggregate([
+      {
+        $project: {
+          _id: 1,
+          orderStatus: 1,
+          orderby: 1,
+          products: 1,
+          createdAt: 1
+        }
+      }
+    ]);
+
     res.json(alluserorders);
   } catch (error) {
     throw new Error(error);
   }
 });
 
+
+
 //get user`s order by id(admin only)
 const getOrderByUserId = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongoDbId(id);
   try {
-    const userorders = await Order.findOne({ orderby: id })
-      .populate("products.product")
-      .populate("orderby")
-      .exec();
-    res.json(userorders);
+    const userorders = await Order.aggregate([
+      {
+        $match: {
+          orderby: mongoose.Types.ObjectId(id)
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "products.product",
+          foreignField: "_id",
+          as: "productsData"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "orderby",
+          foreignField: "_id",
+          as: "orderByData"
+        }
+      }
+    ]);
+
+    res.json(userorders[0]);
   } catch (error) {
     throw new Error(error);
   }
 });
+
 
 //update order
 const updateOrderStatus = asyncHandler(async (req, res) => {
@@ -455,6 +486,70 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 });
 
 
+const getOrderStatistics = asyncHandler(async (req, res) => {
+  try {
+    const totalOrders = await Order.countDocuments();
+    const mostOrderedProduct = await Order.aggregate([
+      { $unwind: "$products" },
+      {
+        $group: {
+          _id: "$products.product",
+          totalOrders: { $sum: 1 },
+        },
+      },
+      { $sort: { totalOrders: -1 } },
+      { $limit: 1 },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $project: {
+          _id: 0,
+          product: "$product.title",
+          totalOrders: 1,
+        },
+      },
+    ]);
+
+    const ordersByDay = await Order.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          totalOrders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const ordersByMonth = await Order.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          totalOrders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.json({
+      totalOrders,
+      mostOrderedProduct,
+      ordersByDay,
+      ordersByMonth,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+
+
 module.exports = {
   createUser,
   loginUser, 
@@ -477,5 +572,6 @@ module.exports = {
   getOrders,
   getAllOrders,
   getOrderByUserId,
-  updateOrderStatus
+  updateOrderStatus,
+  getOrderStatistics
 };

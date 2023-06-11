@@ -492,6 +492,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 const getOrderStatistics = asyncHandler(async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
+
     const mostOrderedProduct = await Order.aggregate([
       { $unwind: "$products" },
       {
@@ -540,11 +541,27 @@ const getOrderStatistics = asyncHandler(async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
+    const totalRevenue = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$paymentIntent.amount" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
     res.json({
       totalOrders,
       mostOrderedProduct,
       ordersByDay,
       ordersByMonth,
+      totalRevenue: totalRevenue[0]?.totalRevenue || 0,
     });
   } catch (error) {
     throw new Error(error);

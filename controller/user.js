@@ -353,6 +353,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 });
 
 //make an order
+// make an order
 const createOrder = asyncHandler(async (req, res) => {
   const { COD, couponApplied } = req.body;
   const { _id } = req.user;
@@ -361,11 +362,26 @@ const createOrder = asyncHandler(async (req, res) => {
     if (!COD) throw new Error("Create cash order failed");
     const user = await User.findById(_id);
     let userCart = await Cart.findOne({ orderby: user._id });
-    let finalAmout = 0;
+    let finalAmount = 0;
     if (couponApplied && userCart.totalAfterDiscount) {
-      finalAmout = userCart.totalAfterDiscount;
+      finalAmount = userCart.totalAfterDiscount;
     } else {
-      finalAmout = userCart.cartTotal;
+      finalAmount = userCart.cartTotal;
+    }
+
+    // Check if there is enough stock for each product in the cart
+    for (let i = 0; i < userCart.products.length; i++) {
+      let product = await Product.findById(userCart.products[i].product).select('quantity');
+
+      if (!product) {
+        return res.status(400).json({ message: "Invalid product ID." });
+      }
+
+      console.log(product.quantity)
+      console.log(userCart.products[i].count)
+      if (userCart.products[i].count > product.quantity) {
+        return res.status(400).json({ message: `Not enough stock for product: ${product.title}` });
+      }
     }
 
     let newOrder = await new Order({
@@ -373,7 +389,7 @@ const createOrder = asyncHandler(async (req, res) => {
       paymentIntent: {
         id: uniqid(),
         method: "COD",
-        amount: finalAmout,
+        amount: finalAmount,
         status: "Cash on Delivery",
         created: Date.now(),
         currency: "usd",
@@ -381,6 +397,7 @@ const createOrder = asyncHandler(async (req, res) => {
       orderby: user._id,
       orderStatus: "Cash on Delivery",
     }).save();
+
     let update = userCart.products.map((item) => {
       return {
         updateOne: {
@@ -389,12 +406,14 @@ const createOrder = asyncHandler(async (req, res) => {
         },
       };
     });
+
     const updated = await Product.bulkWrite(update, {});
     res.json({ message: "success" });
   } catch (error) {
     throw new Error(error);
   }
 });
+
 
 //get info about order
 const getOrders = asyncHandler(async (req, res) => {

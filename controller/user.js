@@ -251,16 +251,17 @@ const getWishlist = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
 //add products to cart
 const userCart = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { cart } = req.body;
-  
+
   validateMongoDbId(_id);
   try {
     let products = [];
     const user = await User.findById(_id);
-    
+
     // Check if the user is blocked
     if (user.isBlocked) {
       return res.status(403).json({ message: "User is blocked and cannot add items to the cart." });
@@ -273,12 +274,19 @@ const userCart = asyncHandler(async (req, res) => {
     }
 
     for (let i = 0; i < cart.length; i++) {
+      const product = cart[i];
+      const getProduct = await Product.findById(products._id);
+
+      // Check if the product exists and if the requested quantity is available
+      if (!getProduct || getProduct.quantity < product.count) {
+        return res.status(400).json({ message: "Requested quantity not available for the product." });
+      }
+
       let object = {};
-      object.product = cart[i]._id;
-      object.count = cart[i].count;
-      object.color = cart[i].color;
-      let getPrice = await Product.findById(cart[i]._id).select("price").exec();
-      object.price = getPrice.price;
+      object.product = getProduct._id;
+      object.count = product.count;
+      object.color = product.color;
+      object.price = getProduct.price;
       products.push(object);
     }
 
@@ -298,6 +306,7 @@ const userCart = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
 
 //get prod from cart
 const getUserCart = asyncHandler(async (req, res) => {

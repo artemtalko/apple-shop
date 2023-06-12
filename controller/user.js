@@ -377,8 +377,7 @@ const createOrder = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: "Invalid product ID." });
       }
 
-      console.log(product.quantity)
-      console.log(userCart.products[i].count)
+    
       if (userCart.products[i].count > product.quantity) {
         return res.status(400).json({ message: `Not enough stock for product` });
       }

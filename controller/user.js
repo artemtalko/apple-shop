@@ -380,7 +380,7 @@ const createOrder = asyncHandler(async (req, res) => {
       console.log(product.quantity)
       console.log(userCart.products[i].count)
       if (userCart.products[i].count > product.quantity) {
-        return res.status(400).json({ message: `Not enough stock for product: ${product.title}` });
+        return res.status(400).json({ message: `Not enough stock for product` });
       }
     }
 
